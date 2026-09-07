@@ -92,6 +92,7 @@ export interface AuditLogEntry {
   companyId: string;
   entityType: "blog" | "user" | "company";
   entityId: string;
+  entityName?: string;
   action: string;
   fromStatus?: string;
   toStatus?: string;

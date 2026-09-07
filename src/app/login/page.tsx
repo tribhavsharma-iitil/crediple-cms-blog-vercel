@@ -29,7 +29,6 @@ export default function LoginPage() {
           ? err.message
           : "Something went wrong. Try again.";
       setError(message);
-      showToast(message, "error");
     } finally {
       setSubmitting(false);
     }
@@ -38,8 +37,14 @@ export default function LoginPage() {
   return (
     <main className="min-h-screen flex items-center justify-center bg-canvas px-6 py-16">
       <div className="w-full max-w-sm">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/brand/crediple_dark.png"
+          alt="Crediple"
+          className="h-8 w-auto"
+        />
         <p className="font-mono text-xs uppercase tracking-[0.2em] text-ink/40">
-          Crediple / Blog CMS
+          Blog CMS
         </p>
         <h1 className="mt-4 font-heading text-2xl font-semibold text-ink">
           Sign in

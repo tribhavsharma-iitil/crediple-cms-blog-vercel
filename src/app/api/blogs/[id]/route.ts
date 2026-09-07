@@ -127,6 +127,7 @@ export async function DELETE(
     companyId: blog.companyId,
     entityType: "blog",
     entityId: blog.id,
+    entityName: blog.title,
     action: "delete",
   });
 

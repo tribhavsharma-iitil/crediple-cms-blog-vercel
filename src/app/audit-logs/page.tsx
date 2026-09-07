@@ -9,6 +9,10 @@ import { cn } from "@/lib/utils";
 
 const PAGE_SIZE = 10;
 
+function formatAction(action: string) {
+  return action.replace(/_/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
 export default function AuditLogsPage() {
   const { activeCompanyId, user } = useAuth();
   const [page, setPage] = useState(1);
@@ -77,7 +81,7 @@ export default function AuditLogsPage() {
             <option value="">All actions</option>
             {actions.map((item) => (
               <option key={item} value={item}>
-                {item.replace(/_/g, " ")}
+                {formatAction(item)}
               </option>
             ))}
           </select>
@@ -117,7 +121,7 @@ export default function AuditLogsPage() {
                 logs.map((log) => (
                   <tr key={log.id} className={cn("border-b border-line last:border-b-0", "hover:bg-ink/[0.02]")}>
                     <td className="px-5 py-4">
-                      <span className="font-medium capitalize text-ink">{log.action.replace(/_/g, " ")}</span>
+                      <span className="font-medium text-ink">{formatAction(log.action)}</span>
                     </td>
                     <td className="px-5 py-4 text-ink/70">
                       <div className="flex flex-col gap-0.5">
@@ -126,7 +130,12 @@ export default function AuditLogsPage() {
                       </div>
                     </td>
                     <td className="px-5 py-4 text-ink/70">
-                      {log.entityType === "blog" ? blogTitleById.get(log.entityId) ?? <span className="text-xs text-ink/45">—</span> : <span className="text-xs text-ink/45">—</span>}
+                      {log.entityType === "blog"
+                        ? log.entityName ??
+                          blogTitleById.get(log.entityId) ?? (
+                            <span className="text-xs text-ink/45">—</span>
+                          )
+                        : <span className="text-xs text-ink/45">—</span>}
                     </td>
                     <td className="px-5 py-4 text-ink/70">
                       <div className="flex flex-col gap-0.5">

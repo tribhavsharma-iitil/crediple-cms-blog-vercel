@@ -22,7 +22,7 @@ type BackendBlog = Omit<
 type BackendListResponse = {
   status: number;
   message: string;
-  data: BackendBlog[];
+  data: BackendBlog[] | { blogs?: BackendBlog[]; data?: BackendBlog[] };
   pagination?: {
     page: number;
     limit: number;
@@ -46,7 +46,9 @@ export type PaginatedBlogs = { blogs: Blog[]; pagination: BlogPagination };
 const statusMap: Record<string, BlogStatus> = {
   DRAFT: "draft",
   SUBMITTED_FOR_REVIEW: "submitted_for_review",
+  AWAITING_REVIEW: "submitted_for_review",
   APPROVED: "approved",
+  AWAITING_PUBLISH: "approved",
   REJECTED: "rejected",
   PUBLISHED: "published",
 };
@@ -102,12 +104,16 @@ function normalizeBlogArray(
     | { blogs?: BackendBlog[]; data?: BackendBlog[] }
     | BackendBlog[]
     | null
-    | undefined,
-) {
+  | undefined,
+): BackendBlog[] {
   if (Array.isArray(response)) return response;
   if (!response || typeof response !== "object") return [];
-  if (Array.isArray((response as BackendListResponse).data))
-    return (response as BackendListResponse).data;
+  const nestedData = (response as BackendListResponse).data;
+  if (Array.isArray(nestedData)) return nestedData;
+  if (nestedData && !Array.isArray(nestedData)) {
+    if (Array.isArray(nestedData.blogs)) return nestedData.blogs;
+    if (Array.isArray(nestedData.data)) return nestedData.data;
+  }
   if (Array.isArray((response as { blogs?: BackendBlog[] }).blogs))
     return (response as { blogs?: BackendBlog[] }).blogs ?? [];
   return [];
@@ -148,7 +154,11 @@ export function useBlogs(companyId: string | null, status?: BlogStatus | "") {
         | BackendListResponse
         | { blogs?: BackendBlog[]; data?: BackendBlog[] }
         | BackendBlog[]
-      >("/api/v1/blogs");
+      >(`/api/v1/blogs?${new URLSearchParams({
+        companyId: companyId ?? "",
+        limit: "100",
+        ...(status ? { status: backendStatusMap[status] } : {}),
+      }).toString()}`);
       return normalizeBlogArray(response)
         .map(normalizeBlog)
         .filter(
@@ -166,6 +176,7 @@ export function usePaginatedBlogs(
   status: BlogStatus | "",
   page: number,
   limit = 10,
+  search = "",
 ) {
   return useQuery({
     queryKey: queryKeys.paginatedBlogs(
@@ -173,6 +184,7 @@ export function usePaginatedBlogs(
       status || undefined,
       page,
       limit,
+      search || undefined,
     ),
     queryFn: async (): Promise<PaginatedBlogs> => {
       const params = new URLSearchParams({
@@ -181,6 +193,7 @@ export function usePaginatedBlogs(
       });
       if (companyId) params.set("companyId", companyId);
       if (status) params.set("status", backendStatusMap[status]);
+      if (search.trim()) params.set("search", search.trim());
       const response = await api.get<
         | BackendListResponse
         | { blogs?: BackendBlog[]; data?: BackendBlog[] }

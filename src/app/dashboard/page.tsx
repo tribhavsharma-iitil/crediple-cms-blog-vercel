@@ -1,20 +1,17 @@
 "use client";
 
-import { useMemo } from "react";
 import Link from "next/link";
 import { useAuth } from "@/components/AuthProvider";
 import { AuthenticatedShell } from "@/components/AuthenticatedShell";
 import { useDashboardSummary } from "@/hooks/useDashboardSummary";
-import { useBlogs } from "@/hooks/useBlogs";
 
 export default function DashboardPage() {
   const { activeCompanyId, user } = useAuth();
-  const canFilterByCompany = user?.role?.key === "super_admin";
   const {
     data: summary,
     isLoading,
     error,
-  } = useDashboardSummary(activeCompanyId, canFilterByCompany);
+  } = useDashboardSummary(activeCompanyId);
 
   return (
     <AuthenticatedShell>
@@ -66,7 +63,7 @@ export default function DashboardPage() {
                   key={b.id}
                   className="px-4 py-3 text-sm flex justify-between"
                 >
-                  <Link href={`/blogs/${b.id}`} className="hover:text-accent">
+                  <Link href={`/blogs/${b.id}`} title={b.title} className="min-w-0 flex-1 truncate hover:text-accent">
                     {b.title}
                   </Link>
                   <span className="text-xs text-ink/40 font-mono">
@@ -95,8 +92,8 @@ export default function DashboardPage() {
                   key={l.id}
                   className="px-4 py-3 text-sm flex justify-between"
                 >
-                  <span className="capitalize">
-                    {l.action.replace(/_/g, " ")}
+                  <span className="min-w-0 flex-1 truncate capitalize" title={l.blogTitle}>
+                    {l.action.replace(/_/g, " ")}{l.blogTitle ? `: ${l.blogTitle}` : ""}
                   </span>
                   <span className="text-xs text-ink/40 font-mono">
                     {new Date(l.createdAt).toLocaleTimeString()}

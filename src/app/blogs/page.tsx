@@ -56,7 +56,7 @@ export default function BlogsPage() {
 }
 
 function BlogsContent() {
-  const { activeCompanyId } = useAuth();
+  const { activeCompanyId, hasPermission } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [search, setSearch] = useState("");
@@ -67,14 +67,10 @@ function BlogsContent() {
     status,
     page,
     10,
+    search,
   );
   const blogs = data?.blogs ?? [];
   const pagination = data?.pagination;
-  const visibleBlogs = blogs.filter((blog) =>
-    `${blog.title} ${blog.excerpt} ${blog.tags.join(" ")}`
-      .toLowerCase()
-      .includes(search.toLowerCase().trim()),
-  );
   function changeFilter(value: BlogStatus | "") {
     setPage(1);
     router.push(value ? `/blogs?status=${value}` : "/blogs");
@@ -85,7 +81,9 @@ function BlogsContent() {
         <div>
           <h1 className="text-xl font-semibold text-ink">Blogs</h1>
           <p className="mt-1 text-sm text-ink/70">
-            Create, review, and publish your content.
+            {hasPermission("blog.create")
+              ? "Create, review, and publish your content."
+              : "Browse posts that are available for review."}
           </p>
         </div>
         <RequirePermission permission="blog.create">
@@ -93,7 +91,7 @@ function BlogsContent() {
             href="/blogs/new"
             className={buttonVariants({ variant: "primary" })}
           >
-            New post
+            Create Blog
           </Link>
         </RequirePermission>
       </div>
@@ -127,7 +125,7 @@ function BlogsContent() {
       </div>
       {isLoading ? (
         <BlogsSkeleton />
-      ) : visibleBlogs.length === 0 ? (
+      ) : blogs.length === 0 ? (
         <div className="flex min-h-52 flex-col items-center justify-center rounded-xl border border-line bg-panel px-4 py-8 text-center">
           <FileText className="mb-3 h-7 w-7 text-ink/60" />
           <p className="text-sm font-medium text-ink">No blogs found</p>
@@ -155,7 +153,7 @@ function BlogsContent() {
               </tr>
             </thead>
             <tbody>
-              {visibleBlogs.map((blog) => (
+              {blogs.map((blog) => (
                 <tr
                   key={blog.id}
                   className="group border-b border-line last:border-b-0 hover:bg-ink/[0.03]"

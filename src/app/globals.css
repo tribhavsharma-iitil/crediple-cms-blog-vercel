@@ -1,4 +1,4 @@
-/* @import "tailwindcss";
+@import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
 @custom-variant dark (&:is(.dark *));
@@ -22,7 +22,7 @@
   --color-status-approved: var(--status-approved);
   --color-status-published: var(--status-published);
   --color-status-rejected: var(--status-rejected);
-} */
+}
 
 /* ============================================================
    LIGHT THEME (default)

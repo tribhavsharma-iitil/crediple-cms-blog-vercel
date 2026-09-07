@@ -24,6 +24,14 @@ export interface BlogFormValues {
 
 const FORM_VALUE_KEYS = ["title", "slug", "excerpt", "content", "coverImageKey", "metaTitle", "metaDescription"] as const;
 
+function slugify(title: string) {
+  return title
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
+
 function toValues(blog?: Blog | null): BlogFormValues {
   return { title: blog?.title ?? "", slug: blog?.slug ?? "", excerpt: blog?.excerpt ?? "", content: blog?.content ?? "", coverImageKey: blog?.coverImageUrls ?? (blog?.coverImageUrl ? [blog.coverImageUrl] : []), metaTitle: blog?.metaTitle ?? "", metaDescription: blog?.metaDescription ?? "" };
 }
@@ -47,13 +55,14 @@ function pickKnownFormFields(source: unknown): Partial<BlogFormValues> {
   return result;
 }
 
-export function BlogForm({ blog, readOnly, onSave, saving, formId, hideSubmit, submitLabel = "Save draft" }: { blog?: Blog | null; readOnly?: boolean; onSave: (values: BlogFormValues) => Promise<void>; saving?: boolean; formId?: string; hideSubmit?: boolean; submitLabel?: string }) {
+export function BlogForm({ blog, readOnly, onSave, saving, formId, hideSubmit, submitLabel = "Save draft", onDirtyChange, submitDisabled }: { blog?: Blog | null; readOnly?: boolean; onSave: (values: BlogFormValues) => Promise<void>; saving?: boolean; formId?: string; hideSubmit?: boolean; submitLabel?: string; onDirtyChange?: (isDirty: boolean) => void; submitDisabled?: boolean }) {
   const draftKey = `cms-blog-draft:${blog?.id ?? "new"}`;
   const [values, setValues] = useState<BlogFormValues>(() => {
     const initialValues = toValues(blog);
     if (readOnly || typeof window === "undefined") return initialValues;
     try { return { ...initialValues, ...pickKnownFormFields(JSON.parse(window.localStorage.getItem(draftKey) ?? "null")) }; } catch { return initialValues; }
   });
+  const initialValuesRef = useRef(toValues(blog));
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
@@ -67,6 +76,12 @@ export function BlogForm({ blog, readOnly, onSave, saving, formId, hideSubmit, s
     if (!readOnly)
       window.localStorage.setItem(draftKey, JSON.stringify(values));
   }, [draftKey, readOnly, values]);
+  useEffect(() => {
+    onDirtyChange?.(
+      !readOnly &&
+        JSON.stringify(values) !== JSON.stringify(initialValuesRef.current),
+    );
+  }, [onDirtyChange, readOnly, values]);
   function update<K extends keyof BlogFormValues>(
     key: K,
     value: BlogFormValues[K],
@@ -154,7 +169,7 @@ export function BlogForm({ blog, readOnly, onSave, saving, formId, hideSubmit, s
           Preview
         </Button>
       </div>
-      <Field label="Title" hint={`${values.title.length}/${LIMITS.title} characters`}><Input disabled={readOnly} required maxLength={LIMITS.title} value={values.title} onChange={(event) => update("title", event.target.value)} placeholder="A clear, specific headline" /></Field>
+      <Field label="Title" hint={`${values.title.length}/${LIMITS.title} characters`}><Input disabled={readOnly} required maxLength={LIMITS.title} value={values.title} onChange={(event) => { const title = event.target.value; setValues((current) => ({ ...current, title, slug: current.slug || slugify(title) })); }} placeholder="A clear, specific headline" /></Field>
       <Field label="URL slug" hint="Leave blank to generate it from the title."><Input disabled={readOnly} value={values.slug} onChange={(event) => update("slug", event.target.value)} className="font-mono" placeholder="auto-generated-from-title" /></Field>
       <Field label="Excerpt" hint={`Short summary used in blog cards and search results. ${values.excerpt.length}/${LIMITS.excerpt}`}><Textarea disabled={readOnly} maxLength={LIMITS.excerpt} value={values.excerpt} onChange={(event) => update("excerpt", event.target.value)} rows={3} placeholder="One or two sentences shown in blog listings" /></Field>
       <Field label="Content" hint={`${contentCharacterCount}/${LIMITS.content} visible characters`}><RichTextEditor disabled={readOnly} value={values.content} onChange={(content, characterCount) => { update("content", content); setContentCharacterCount(characterCount); }} /></Field>
@@ -182,7 +197,7 @@ export function BlogForm({ blog, readOnly, onSave, saving, formId, hideSubmit, s
     </div>
     </div>
     {formError && <p role="alert" className="rounded-lg border border-status-rejected/20 bg-status-rejected/10 px-3 py-2 text-sm text-status-rejected">{formError}</p>}
-    {!readOnly && !hideSubmit && <Button type="submit" variant="dark" disabled={saving}>{saving ? "Saving..." : submitLabel}</Button>}
+    {!readOnly && !hideSubmit && <Button type="submit" variant="dark" disabled={saving || submitDisabled}>{saving ? "Saving..." : submitLabel}</Button>}
   </form>;
 }
 

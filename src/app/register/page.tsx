@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { ZodError } from "zod";
 import { useAuth } from "@/components/AuthProvider";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -14,6 +15,26 @@ const ROLE_OPTIONS = [
   { label: "Reviewer", value: "reviewer" },
   { label: "Super Admin", value: "super_admin" },
 ] as const;
+
+const PASSWORD_REQUIREMENTS = [
+  { label: "At least 8 characters", test: (value: string) => value.length >= 8 },
+  { label: "One lowercase letter", test: (value: string) => /[a-z]/.test(value) },
+  { label: "One uppercase letter", test: (value: string) => /[A-Z]/.test(value) },
+  { label: "One number", test: (value: string) => /\d/.test(value) },
+  {
+    label: "One special character",
+    test: (value: string) => /[^A-Za-z0-9]/.test(value),
+  },
+] as const;
+
+function getErrorMessage(error: unknown) {
+  if (error instanceof ZodError) {
+    return error.issues[0]?.message ?? "Please check the form fields.";
+  }
+  return error instanceof ApiError || error instanceof Error
+    ? error.message
+    : "Something went wrong. Try again.";
+}
 
 export default function RegisterPage() {
   const { register } = useAuth();
@@ -36,12 +57,7 @@ export default function RegisterPage() {
       await register({ firstName, lastName, email, password, role });
       showToast("Account created successfully.");
     } catch (err) {
-      const message =
-        err instanceof ApiError || err instanceof Error
-          ? err.message
-          : "Something went wrong. Try again.";
-      setError(message);
-      showToast(message, "error");
+      setError(getErrorMessage(err));
     } finally {
       setSubmitting(false);
     }
@@ -143,7 +159,26 @@ export default function RegisterPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 autoComplete="new-password"
+                aria-describedby="password-requirements"
               />
+              <ul
+                id="password-requirements"
+                className="mt-2 space-y-1 text-xs text-ink/60"
+              >
+                {PASSWORD_REQUIREMENTS.map((requirement) => {
+                  const met = requirement.test(password);
+                  return (
+                    <li
+                      key={requirement.label}
+                      className={
+                        met ? "text-status-published" : "text-ink/60"
+                      }
+                    >
+                      {met ? "✓" : "•"} {requirement.label}
+                    </li>
+                  );
+                })}
+              </ul>
             </div>
 
             <div>

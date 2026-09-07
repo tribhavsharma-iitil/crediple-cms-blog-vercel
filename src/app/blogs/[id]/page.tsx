@@ -28,6 +28,9 @@ export default function BlogDetailPage() {
   const deleteBlog = useDeleteBlog();
   const blogStatusActions = useBlogStatusActions(id);
   const [reviewComment, setReviewComment] = useState("");
+  const [reviewFeedbackError, setReviewFeedbackError] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isDraftDirty, setIsDraftDirty] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const { showToast } = useToast();
 
@@ -44,7 +47,14 @@ export default function BlogDetailPage() {
   }, [blogQuery.error, router]);
 
   async function save(values: BlogFormValues) {
-    try { await updateBlog.mutateAsync(values); showToast("Draft saved."); } catch { /* surfaced via the inline error banner below */ }
+    try {
+      await updateBlog.mutateAsync(values);
+      setIsEditing(false);
+      setIsDraftDirty(false);
+      showToast("Draft saved.");
+    } catch {
+      // The inline banner below presents the request error in one location.
+    }
   }
 
   async function remove() {
@@ -65,12 +75,17 @@ export default function BlogDetailPage() {
 
   async function approveBlog() {
     const comment = reviewComment.trim();
+    if (!comment) {
+      setReviewFeedbackError("Feedback is required before approving a post.");
+      return;
+    }
     try {
       await blogStatusActions.review.mutateAsync({
         action: "approve",
         ...(comment ? { comment } : {}),
       });
       setReviewComment("");
+      setReviewFeedbackError(null);
       showToast("Post approved.");
     } catch (error) {
       showToast(
@@ -82,10 +97,14 @@ export default function BlogDetailPage() {
 
   async function rejectBlog() {
     const comment = reviewComment.trim();
-    if (!comment) return;
+    if (!comment) {
+      setReviewFeedbackError("Feedback is required before rejecting a post.");
+      return;
+    }
     try {
       await blogStatusActions.review.mutateAsync({ action: "reject", comment });
       setReviewComment("");
+      setReviewFeedbackError(null);
       showToast("Post sent back with feedback.");
     } catch (error) {
       showToast(
@@ -194,7 +213,23 @@ export default function BlogDetailPage() {
           </p>
         )}
 
-        <BlogForm blog={blog} readOnly={!canEdit} onSave={save} saving={updateBlog.isPending} submitLabel="Edit blog" />
+        {canEdit && !isEditing && (
+          <div className="mb-4">
+            <Button variant="primary" onClick={() => setIsEditing(true)}>
+              Edit draft
+            </Button>
+          </div>
+        )}
+
+        <BlogForm
+          blog={blog}
+          readOnly={!canEdit || !isEditing}
+          onSave={save}
+          saving={updateBlog.isPending}
+          submitLabel="Save draft"
+          onDirtyChange={setIsDraftDirty}
+          submitDisabled={!isDraftDirty}
+        />
 
         <section className="mt-8 rounded-xl border border-line bg-panel p-5">
           <div className="flex items-center justify-between gap-3">
@@ -227,10 +262,26 @@ export default function BlogDetailPage() {
             <div className="mt-5 space-y-4">
               <Textarea
                 value={reviewComment}
-                onChange={(event) => setReviewComment(event.target.value)}
+                onChange={(event) => {
+                  setReviewComment(event.target.value);
+                  setReviewFeedbackError(null);
+                }}
                 rows={3}
+                aria-invalid={Boolean(reviewFeedbackError)}
+                aria-describedby={
+                  reviewFeedbackError ? "review-feedback-error" : undefined
+                }
                 placeholder="Add feedback for the author (included with approval or rejection)"
               />
+              {reviewFeedbackError && (
+                <p
+                  id="review-feedback-error"
+                  role="alert"
+                  className="text-sm text-status-rejected"
+                >
+                  {reviewFeedbackError}
+                </p>
+              )}
               <div className="flex flex-wrap gap-3">
                 <Button
                   variant="primary"
@@ -242,9 +293,7 @@ export default function BlogDetailPage() {
                 <Button
                   variant="danger"
                   onClick={rejectBlog}
-                  disabled={
-                    blogStatusActions.review.isPending || !reviewComment.trim()
-                  }
+                  disabled={blogStatusActions.review.isPending}
                 >
                   Rejected
                 </Button>

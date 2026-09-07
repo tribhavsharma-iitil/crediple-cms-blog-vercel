@@ -27,6 +27,9 @@ export async function GET(req: NextRequest) {
   const companyId = req.nextUrl.searchParams.get("companyId");
   const status = req.nextUrl.searchParams.get("status");
   const authorId = req.nextUrl.searchParams.get("authorId");
+  const search = req.nextUrl.searchParams.get("search")?.trim().toLowerCase();
+  const page = Math.max(1, Number(req.nextUrl.searchParams.get("page")) || 1);
+  const limit = Math.max(1, Number(req.nextUrl.searchParams.get("limit")) || 10);
 
   if (!companyId || !userCanAccessCompany(user, companyId)) {
     return NextResponse.json(
@@ -38,10 +41,27 @@ export async function GET(req: NextRequest) {
   let results = blogs.filter((b) => b.companyId === companyId);
   if (status) results = results.filter((b) => b.status === status);
   if (authorId) results = results.filter((b) => b.authorId === authorId);
+  if (search) {
+    results = results.filter((blog) =>
+      `${blog.title} ${blog.excerpt} ${blog.tags.join(" ")}`
+        .toLowerCase()
+        .includes(search),
+    );
+  }
 
   results = [...results].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
 
-  return NextResponse.json({ blogs: results });
+  const totalItems = results.length;
+  const start = (page - 1) * limit;
+  return NextResponse.json({
+    blogs: results.slice(start, start + limit),
+    pagination: {
+      page,
+      limit,
+      totalItems,
+      totalPages: Math.max(1, Math.ceil(totalItems / limit)),
+    },
+  });
 }
 
 export async function POST(req: NextRequest) {

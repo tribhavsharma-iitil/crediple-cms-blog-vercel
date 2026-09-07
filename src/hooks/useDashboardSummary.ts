@@ -14,6 +14,7 @@ export interface DashboardSummary {
     action: string;
     createdAt: string;
     entityId: string;
+    blogTitle?: string;
   }[];
 }
 
@@ -36,13 +37,12 @@ function normalizeDashboardSummary(
 
 export function useDashboardSummary(
   companyId: string | null,
-  canFilterByCompany = false,
 ) {
   return useQuery({
     queryKey: queryKeys.dashboardSummary(companyId),
     queryFn: () => {
       const params = new URLSearchParams();
-      if (canFilterByCompany && companyId) params.set("companyId", companyId);
+      if (companyId) params.set("companyId", companyId);
       const query = params.toString();
       return api
         .get<DashboardSummaryResponse>(
@@ -50,6 +50,6 @@ export function useDashboardSummary(
         )
         .then(normalizeDashboardSummary);
     },
-    enabled: canFilterByCompany ? Boolean(companyId) : true,
+    enabled: Boolean(companyId),
   });
 }

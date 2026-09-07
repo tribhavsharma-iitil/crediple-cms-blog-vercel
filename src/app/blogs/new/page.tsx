@@ -24,11 +24,8 @@ export default function NewBlogPage() {
       });
       showToast("Draft saved.");
       router.push(`/blogs/${blog.id}`);
-    } catch (error) {
-      showToast(
-        error instanceof Error ? error.message : "Couldn't save the post.",
-        "error",
-      );
+    } catch {
+      // The header next to the save action renders the request error.
     }
   }
 
@@ -43,21 +40,21 @@ export default function NewBlogPage() {
     <AuthenticatedShell>
       <div className="w-full">
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-          <h1 className="text-xl font-semibold text-ink">New post</h1>
-          <Button
-            type="submit"
-            form="new-blog-form"
-            variant="primary"
-            disabled={createBlog.isPending}
-          >
-            {createBlog.isPending ? "Saving..." : "Save draft"}
-          </Button>
+          <h1 className="text-xl font-semibold text-ink">Create Blog</h1>
+          <div className="flex items-center gap-3">
+            {error && (
+              <p className="text-sm text-status-rejected">{error}</p>
+            )}
+            <Button
+              type="submit"
+              form="new-blog-form"
+              variant="primary"
+              disabled={createBlog.isPending}
+            >
+              {createBlog.isPending ? "Saving..." : "Save draft"}
+            </Button>
+          </div>
         </div>
-        {error && (
-          <p className="mb-4 text-sm text-status-rejected bg-status-rejected/10 border border-status-rejected/20 rounded-lg px-3 py-2">
-            {error}
-          </p>
-        )}
         <BlogForm
           formId="new-blog-form"
           hideSubmit

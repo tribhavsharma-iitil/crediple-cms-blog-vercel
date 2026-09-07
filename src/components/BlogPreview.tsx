@@ -102,10 +102,14 @@ export function BlogPreview({ post, contentCharacterCount }: { post: BlogPreview
               </aside>
             )}
 
-            <div className="rounded-2xl border border-white/8 bg-black/15 p-5 sm:p-7">
+            <div
+              className={`min-w-0 overflow-hidden rounded-2xl border border-white/8 bg-black/15 p-5 sm:p-7 ${
+                headings.length === 0 ? "lg:col-span-2" : ""
+              }`}
+            >
               {contentCharacterCount > 0 ? (
                 <div
-                  className="prose prose-invert prose-lg max-w-none
+                  className="prose prose-invert prose-lg max-w-none break-words
                     prose-headings:font-heading prose-headings:text-white
                     prose-p:text-white/88 prose-li:text-white/88 prose-strong:text-white
                     prose-a:text-[#4f80ff] prose-a:no-underline hover:prose-a:underline"

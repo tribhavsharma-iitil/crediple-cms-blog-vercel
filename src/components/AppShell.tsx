@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "./AuthProvider";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { KeyRound, LogOut, Menu, UserRound } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", permission: null },
@@ -24,11 +24,30 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const profileCloseTimer = useRef<number | null>(null);
+
+  function cancelProfileClose() {
+    if (profileCloseTimer.current) {
+      window.clearTimeout(profileCloseTimer.current);
+      profileCloseTimer.current = null;
+    }
+  }
+
+  function scheduleProfileClose() {
+    cancelProfileClose();
+    profileCloseTimer.current = window.setTimeout(() => {
+      setProfileOpen(false);
+      profileCloseTimer.current = null;
+    }, 250);
+  }
 
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-canvas md:grid md:grid-cols-[280px_minmax(0,1fr)]">
+    <div
+      className="min-h-screen bg-canvas md:grid md:grid-cols-[var(--sidebar-width)_minmax(0,1fr)]"
+      style={{ "--sidebar-width": "18rem" } as React.CSSProperties}
+    >
       {drawerOpen && (
         <button
           aria-label="Close navigation"
@@ -38,15 +57,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       )}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-40 flex w-72 -translate-x-full flex-col bg-[#0c1a35] text-white transition-transform md:sticky md:top-0 md:h-screen md:w-auto md:self-start md:translate-x-0",
+          "fixed inset-y-0 left-0 z-40 flex w-72 -translate-x-full flex-col bg-[#0c1a35] text-white transition-transform md:sticky md:top-0 md:h-screen md:w-[var(--sidebar-width)] md:self-start md:translate-x-0",
           drawerOpen && "translate-x-0",
         )}
       >
-        <div className="px-5 py-5 border-b border-white/10">
-          <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-white/50">
-            Crediple
+        <div className="border-b border-white/10 px-5 py-5">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/brand/crediple_light.png"
+            alt="Crediple"
+            className="h-7 w-auto max-w-full object-contain"
+          />
+          <p className="mt-2 font-mono text-[11px] uppercase tracking-[0.2em] text-white/50">
+            Blog CMS
           </p>
-          <p className="font-heading font-semibold">Blog CMS</p>
         </div>
 
         <nav className="flex-1 px-3 py-4 space-y-0.5">
@@ -102,7 +126,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </span>
             )}
             <ThemeToggle />
-            <div className="relative">
+            <div
+              className="relative"
+              onMouseEnter={cancelProfileClose}
+              onMouseLeave={scheduleProfileClose}
+            >
               <button
                 type="button"
                 aria-label="Open profile menu"
@@ -117,6 +145,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <div
                   role="menu"
                   aria-label="Profile menu"
+                  onMouseEnter={cancelProfileClose}
+                  onMouseLeave={scheduleProfileClose}
                   className="absolute right-0 z-30 mt-2 w-64 overflow-hidden rounded-xl border border-line bg-panel shadow-lg"
                 >
                   <div className="border-b border-line px-4 py-3">
@@ -140,7 +170,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     <button
                       type="button"
                       role="menuitem"
-                      onClick={() => logout()}
+                      onClick={() => {
+                        cancelProfileClose();
+                        setProfileOpen(false);
+                        void logout();
+                      }}
                       className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-ink/70 hover:bg-ink/5 hover:text-ink focus-visible:ring-2 focus-visible:ring-accent/40"
                     >
                       <LogOut className="h-4 w-4" aria-hidden="true" />

@@ -24,8 +24,8 @@ export const reviewActionSchema = z
     action: z.enum(["approve", "reject"]),
     comment: z.string().trim().optional(),
   })
-  .refine((data) => data.action !== "reject" || !!data.comment, {
-    message: "A comment is required when rejecting.",
+  .refine((data) => !!data.comment, {
+    message: "Feedback is required when approving or rejecting.",
     path: ["comment"],
   });
 

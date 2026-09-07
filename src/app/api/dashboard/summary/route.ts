@@ -31,7 +31,14 @@ export async function GET(req: NextRequest) {
 
   const recentActivity = auditLogs
     .filter((l) => l.companyId === companyId)
-    .slice(0, 8);
+    .slice(0, 8)
+    .map((entry) => ({
+      ...entry,
+      blogTitle:
+        entry.entityType === "blog"
+          ? blogs.find((blog) => blog.id === entry.entityId)?.title
+          : undefined,
+    }));
 
   return NextResponse.json({
     draftCount,

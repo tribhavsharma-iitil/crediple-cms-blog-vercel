@@ -7,7 +7,8 @@ export const queryKeys = {
     status?: string,
     page = 1,
     limit = 10,
-  ) => ["blogs", "paginated", companyId, status, page, limit] as const,
+    search?: string,
+  ) => ["blogs", "paginated", companyId, status, page, limit, search] as const,
   blog: (id: string) => ["blog", id] as const,
   dashboardSummary: (companyId?: string | null) =>
     ["dashboard-summary", companyId] as const,

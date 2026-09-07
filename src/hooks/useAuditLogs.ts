@@ -11,6 +11,7 @@ export interface AuditLogRow {
   action: string;
   entityType: string;
   entityId: string;
+  entityName?: string;
   fromStatus?: string;
   toStatus?: string;
   comment?: string;
@@ -32,7 +33,14 @@ export interface AuditLogsResult {
 }
 
 type AuditLogsResponse =
-  | { status?: number; message?: string; data?: AuditLogRow[]; pagination?: AuditLogPagination }
+  | {
+      status?: number;
+      message?: string;
+      data?:
+        | AuditLogRow[]
+        | { logs?: AuditLogRow[]; data?: AuditLogRow[]; pagination?: AuditLogPagination };
+      pagination?: AuditLogPagination;
+    }
   | { logs?: AuditLogRow[]; pagination?: AuditLogPagination }
   | AuditLogRow[];
 
@@ -49,15 +57,22 @@ function normalizeAuditLogsResponse(response: AuditLogsResponse, fallbackPage: n
     };
   }
 
-  const logs = "data" in response && Array.isArray(response.data)
-    ? response.data
-    : "logs" in response && Array.isArray(response.logs)
-      ? response.logs
-      : [];
+  const nestedData = "data" in response ? response.data : undefined;
+  const logs: AuditLogRow[] = Array.isArray(nestedData)
+    ? nestedData
+    : nestedData && typeof nestedData === "object"
+      ? nestedData.logs ?? nestedData.data ?? []
+      : "logs" in response && Array.isArray(response.logs)
+        ? response.logs
+        : [];
+  const pagination =
+    (nestedData && !Array.isArray(nestedData)
+      ? nestedData.pagination
+      : undefined) ?? response.pagination;
 
   return {
     logs,
-    pagination: response.pagination ?? {
+    pagination: pagination ?? {
       page: fallbackPage,
       limit: fallbackLimit,
       totalItems: logs.length,
