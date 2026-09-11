@@ -37,12 +37,24 @@ export default function LoginPage() {
   return (
     <main className="min-h-screen flex items-center justify-center bg-canvas px-6 py-16">
       <div className="w-full max-w-sm">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/brand/crediple_dark.png"
-          alt="Crediple"
-          className="h-8 w-auto"
-        />
+        <div className="h-8">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/brand/crediple_light.png"
+            alt="Crediple"
+            width={128}
+            height={32}
+            className="h-8 w-auto dark:hidden"
+          />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/brand/crediple_dark.png"
+            alt="Crediple"
+            width={128}
+            height={32}
+            className="hidden h-8 w-auto dark:block"
+          />
+        </div>
         <p className="font-mono text-xs uppercase tracking-[0.2em] text-ink/40">
           Blog CMS
         </p>

@@ -13,12 +13,20 @@ export interface UserRow {
 }
 
 type UsersResponse =
-  | { status?: number; message?: string; data?: UserRow[]; users?: UserRow[] }
+  | {
+      status?: number;
+      message?: string;
+      data?: UserRow[] | { users?: UserRow[]; data?: UserRow[] };
+      users?: UserRow[];
+    }
   | UserRow[];
 
 function normalizeUsersResponse(response: UsersResponse) {
   if (Array.isArray(response)) return response;
   if (Array.isArray(response.data)) return response.data;
+  if (response.data && !Array.isArray(response.data)) {
+    return response.data.users ?? response.data.data ?? [];
+  }
   if (Array.isArray(response.users)) return response.users;
   return [];
 }
@@ -27,6 +35,6 @@ export function useUsers() {
   return useQuery({
     queryKey: queryKeys.users,
     queryFn: async () =>
-      (await api.get<{ users: UserRow[] }>("/api/users")).users,
+      normalizeUsersResponse(await api.get<UsersResponse>("/api/v1/users")),
   });
 }

@@ -33,7 +33,17 @@ function slugify(title: string) {
 }
 
 function toValues(blog?: Blog | null): BlogFormValues {
-  return { title: blog?.title ?? "", slug: blog?.slug ?? "", excerpt: blog?.excerpt ?? "", content: blog?.content ?? "", coverImageKey: blog?.coverImageUrls ?? (blog?.coverImageUrl ? [blog.coverImageUrl] : []), metaTitle: blog?.metaTitle ?? "", metaDescription: blog?.metaDescription ?? "" };
+  const title = blog?.title ?? "";
+  const generatedSlug = slugify(title);
+  const existingSlug = blog?.slug?.trim() ?? "";
+  const slug =
+    existingSlug.length === 1 &&
+    generatedSlug.length > 1 &&
+    existingSlug === generatedSlug[0]
+      ? generatedSlug
+      : existingSlug;
+
+  return { title, slug, excerpt: blog?.excerpt ?? "", content: blog?.content ?? "", coverImageKey: blog?.coverImageUrls ?? (blog?.coverImageUrl ? [blog.coverImageUrl] : []), metaTitle: blog?.metaTitle ?? "", metaDescription: blog?.metaDescription ?? "" };
 }
 
 /**
@@ -61,6 +71,15 @@ export function BlogForm({ blog, readOnly, onSave, saving, formId, hideSubmit, s
     const initialValues = toValues(blog);
     if (readOnly || typeof window === "undefined") return initialValues;
     try { return { ...initialValues, ...pickKnownFormFields(JSON.parse(window.localStorage.getItem(draftKey) ?? "null")) }; } catch { return initialValues; }
+  });
+  const [slugEdited, setSlugEdited] = useState(() => {
+    const titleSlug = slugify(blog?.title ?? "");
+    const existingSlug = blog?.slug?.trim() ?? "";
+    return Boolean(
+      existingSlug &&
+        existingSlug !== titleSlug.slice(0, 1) &&
+        existingSlug !== titleSlug,
+    );
   });
   const initialValuesRef = useRef(toValues(blog));
   const [uploading, setUploading] = useState(false);
@@ -169,8 +188,8 @@ export function BlogForm({ blog, readOnly, onSave, saving, formId, hideSubmit, s
           Preview
         </Button>
       </div>
-      <Field label="Title" hint={`${values.title.length}/${LIMITS.title} characters`}><Input disabled={readOnly} required maxLength={LIMITS.title} value={values.title} onChange={(event) => { const title = event.target.value; setValues((current) => ({ ...current, title, slug: current.slug || slugify(title) })); }} placeholder="A clear, specific headline" /></Field>
-      <Field label="URL slug" hint="Leave blank to generate it from the title."><Input disabled={readOnly} value={values.slug} onChange={(event) => update("slug", event.target.value)} className="font-mono" placeholder="auto-generated-from-title" /></Field>
+      <Field label="Title" hint={`${values.title.length}/${LIMITS.title} characters`}><Input disabled={readOnly} required maxLength={LIMITS.title} value={values.title} onChange={(event) => { const title = event.target.value; setValues((current) => ({ ...current, title, slug: slugEdited ? current.slug : slugify(title) })); }} placeholder="A clear, specific headline" /></Field>
+      <Field label="URL slug" hint="Generated from the title until you edit this field."><Input disabled={readOnly} value={values.slug} onChange={(event) => { setSlugEdited(Boolean(event.target.value.trim())); update("slug", event.target.value); }} className="font-mono" placeholder="auto-generated-from-title" /></Field>
       <Field label="Excerpt" hint={`Short summary used in blog cards and search results. ${values.excerpt.length}/${LIMITS.excerpt}`}><Textarea disabled={readOnly} maxLength={LIMITS.excerpt} value={values.excerpt} onChange={(event) => update("excerpt", event.target.value)} rows={3} placeholder="One or two sentences shown in blog listings" /></Field>
       <Field label="Content" hint={`${contentCharacterCount}/${LIMITS.content} visible characters`}><RichTextEditor disabled={readOnly} value={values.content} onChange={(content, characterCount) => { update("content", content); setContentCharacterCount(characterCount); }} /></Field>
     </section>
