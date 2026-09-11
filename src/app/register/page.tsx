@@ -67,7 +67,14 @@ export default function RegisterPage() {
     <div className="min-h-screen grid lg:grid-cols-[1.1fr_1fr]">
       <div className="hidden lg:flex flex-col justify-between bg-[#0c1a35] text-white px-14 py-12">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/brand/crediple_dark.png" alt="Crediple" className="h-7 w-auto" />
+        <img
+          src="/brand/crediple_dark.png"
+          alt="Crediple"
+          width={214}
+          height={53}
+          className="max-w-full object-contain object-left"
+          style={{ width: "214px", height: "53px" }}
+        />
 
         <div>
           <h1 className="font-heading text-3xl font-semibold leading-tight mb-5 max-w-sm">

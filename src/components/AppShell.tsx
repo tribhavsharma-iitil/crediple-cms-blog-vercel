@@ -64,7 +64,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <div className="border-b border-white/10 px-5 py-5">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/brand/crediple_light.png"
+            src="/brand/crediple_dark.png"
             alt="Crediple"
             className="h-7 w-auto max-w-full object-contain"
           />
