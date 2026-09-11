@@ -2,12 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { Check, Send, Undo2, X } from "lucide-react";
 import { useAuth } from "@/components/AuthProvider";
 import { AuthenticatedShell } from "@/components/AuthenticatedShell";
 import { BlogForm, BlogFormValues } from "@/components/BlogForm";
 import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 import { Textarea } from "@/components/ui/Input";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { StatusBadge } from "@/components/StatusBadge";
 import {
   useBlog,
@@ -16,7 +18,6 @@ import {
   useUpdateBlog,
 } from "@/hooks/useBlogs";
 import { ApiError } from "@/lib/api";
-import type { BlogStatus } from "@/lib/mock-db";
 import { useToast } from "@/components/ToastProvider";
 
 export default function BlogDetailPage() {
@@ -186,18 +187,22 @@ export default function BlogDetailPage() {
   return (
     <AuthenticatedShell>
       <div className="w-full">
-        <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <button onClick={() => router.push("/blogs")} aria-label="Back to blogs" className="mb-3 inline-flex h-8 w-8 items-center justify-center rounded-lg text-ink/50 hover:bg-ink/5 hover:text-ink">
-              <ArrowLeft className="h-4 w-4" />
-            </button>
-            <h1 className="text-xl font-semibold text-ink">Edit post</h1>
-            <p className="mt-1 text-sm text-ink/50">
-              Last updated {new Date(blog.updatedAt).toLocaleString()}
-            </p>
-          </div>
-          <StatusBadge status={blog.status} />
-        </div>
+        <PageHeader
+          backHref="/blogs"
+          backLabel="Back to blogs"
+          title="Edit post"
+          description={`Last updated ${new Date(blog.updatedAt).toLocaleString()}`}
+          actions={
+            <div className="flex items-center gap-3">
+              {canEdit && !isEditing && (
+                <Button variant="primary" onClick={() => setIsEditing(true)}>
+                  Edit draft
+                </Button>
+              )}
+              <StatusBadge status={blog.status} />
+            </div>
+          }
+        />
 
         {error && (
           <p className="mb-4 rounded-lg border border-status-rejected/20 bg-status-rejected/10 px-3 py-2 text-sm text-status-rejected">
@@ -208,17 +213,9 @@ export default function BlogDetailPage() {
         )}
 
         {!canEdit && (
-          <p className="mb-4 rounded-lg border border-line bg-panel px-3 py-2 text-sm text-ink/60">
+          <p className="mb-4 rounded-lg border border-line bg-panel px-3 py-2 text-sm text-ink/70">
             You don&apos;t have permission to edit this post{blog.status === "published" ? " — it's published; only an admin can make changes." : "."}
           </p>
-        )}
-
-        {canEdit && !isEditing && (
-          <div className="mb-4">
-            <Button variant="primary" onClick={() => setIsEditing(true)}>
-              Edit draft
-            </Button>
-          </div>
         )}
 
         <BlogForm
@@ -232,16 +229,13 @@ export default function BlogDetailPage() {
         />
 
         <section className="mt-8 rounded-xl border border-line bg-panel p-5">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <h2 className="text-base font-semibold text-ink">
-                Workflow actions
-              </h2>
-              <p className="mt-1 text-sm text-ink/50">
-                Move this post through review and publish states.
-              </p>
-            </div>
-            <StatusBadge status={blog.status as BlogStatus} />
+          <div>
+            <h2 className="text-base font-semibold text-ink">
+              Workflow actions
+            </h2>
+            <p className="mt-1 text-sm text-ink/50">
+              Move this post through review and publish states.
+            </p>
           </div>
 
           {canSubmitForReview && (
@@ -251,6 +245,7 @@ export default function BlogDetailPage() {
                 onClick={sendForReview}
                 disabled={blogStatusActions.submitForReview.isPending}
               >
+                <Send className="h-3.5 w-3.5" />
                 {blogStatusActions.submitForReview.isPending
                   ? "Submitting..."
                   : "Send for review"}
@@ -288,14 +283,16 @@ export default function BlogDetailPage() {
                   onClick={approveBlog}
                   disabled={blogStatusActions.review.isPending}
                 >
-                  {blogStatusActions.review.isPending ? "Updating..." : "Approved"}
+                  <Check className="h-3.5 w-3.5" />
+                  {blogStatusActions.review.isPending ? "Updating..." : "Approve"}
                 </Button>
                 <Button
                   variant="danger"
                   onClick={rejectBlog}
                   disabled={blogStatusActions.review.isPending}
                 >
-                  Rejected
+                  <X className="h-3.5 w-3.5" />
+                  Reject
                 </Button>
               </div>
             </div>
@@ -308,6 +305,7 @@ export default function BlogDetailPage() {
                 onClick={publish}
                 disabled={blogStatusActions.publish.isPending}
               >
+                <Send className="h-3.5 w-3.5" />
                 {blogStatusActions.publish.isPending ? "Publishing..." : "Publish"}
               </Button>
             </div>
@@ -320,6 +318,7 @@ export default function BlogDetailPage() {
                 onClick={unpublish}
                 disabled={blogStatusActions.unpublish.isPending}
               >
+                <Undo2 className="h-3.5 w-3.5" />
                 {blogStatusActions.unpublish.isPending
                   ? "Unpublishing..."
                   : "Unpublish"}
@@ -342,11 +341,11 @@ export default function BlogDetailPage() {
                       <span className="text-xs font-medium capitalize text-ink">
                         {review.action}
                       </span>
-                      <span className="text-xs text-ink/45">
+                      <span className="text-xs text-ink/50">
                         {new Date(review.createdAt).toLocaleString()}
                       </span>
                     </div>
-                    <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-ink/65">
+                    <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-ink/70">
                       {review.comment}
                     </p>
                   </div>
@@ -356,7 +355,13 @@ export default function BlogDetailPage() {
           )}
         </section>
 
-        <div className="mt-8 border-t border-line pt-5">
+        <Card className="mt-8 flex flex-wrap items-center justify-between gap-4 border-status-rejected/20 bg-status-rejected/[0.03] p-5">
+          <div>
+            <h2 className="text-sm font-semibold text-ink">Danger zone</h2>
+            <p className="mt-1 text-sm text-ink/50">
+              Deleting a post is permanent and cannot be undone.
+            </p>
+          </div>
           <Button
             variant="danger"
             onClick={() => setIsDeleteDialogOpen(true)}
@@ -364,7 +369,7 @@ export default function BlogDetailPage() {
           >
             Delete post
           </Button>
-        </div>
+        </Card>
       </div>
 
       {isDeleteDialogOpen && (
@@ -401,7 +406,7 @@ function DeleteConfirmDialog({
         <h2 id="delete-blog-title" className="text-lg font-semibold text-ink">
           Delete this blog?
         </h2>
-        <p className="mt-2 text-sm leading-6 text-ink/60">
+        <p className="mt-2 text-sm leading-6 text-ink/70">
           This action will permanently delete this blog. You won’t be able to
           recover it afterward.
         </p>

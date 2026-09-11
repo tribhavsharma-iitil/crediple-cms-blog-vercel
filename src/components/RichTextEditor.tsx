@@ -122,6 +122,7 @@ export function RichTextEditor({
       type="button"
       variant={active ? "primary" : "ghost"}
       size="sm"
+      className="h-8 w-8 px-0"
       aria-label={label}
       title={label}
       onClick={onClick}
@@ -133,7 +134,7 @@ export function RichTextEditor({
 
   return (
     <div>
-      <div className="flex flex-wrap gap-1 rounded-t-lg border border-line bg-canvas p-2">
+      <div className="flex flex-wrap gap-1 rounded-t-lg border border-line bg-panel p-2">
         {action(
           "Bold",
           <Bold className="h-4 w-4" />,
@@ -146,6 +147,7 @@ export function RichTextEditor({
           () => editor?.chain().focus().toggleItalic().run(),
           !!editor?.isActive("italic"),
         )}
+        <div className="mx-1 my-1 w-px self-stretch bg-line" aria-hidden="true" />
         {action(
           "Heading 2",
           <Heading2 className="h-4 w-4" />,
@@ -176,6 +178,7 @@ export function RichTextEditor({
           () => editor?.chain().focus().toggleBlockquote().run(),
           !!editor?.isActive("blockquote"),
         )}
+        <div className="mx-1 my-1 w-px self-stretch bg-line" aria-hidden="true" />
         {action(
           "Add link",
           <LinkIcon className="h-4 w-4" />,
@@ -185,7 +188,7 @@ export function RichTextEditor({
         <label
           aria-label={uploading ? "Uploading image" : "Insert image"}
           title={uploading ? "Uploading image" : "Insert image"}
-          className={`${buttonVariants({ variant: "ghost", size: "sm" })} ${disabled || uploading ? "pointer-events-none opacity-60" : ""}`}
+          className={`${buttonVariants({ variant: "ghost", size: "sm" })} h-8 w-8 px-0 ${disabled || uploading ? "pointer-events-none opacity-60" : ""}`}
         >
           <ImagePlus className="h-4 w-4" />
           <input
@@ -196,6 +199,7 @@ export function RichTextEditor({
             disabled={disabled || uploading}
           />
         </label>
+        <div className="mx-1 my-1 w-px self-stretch bg-line" aria-hidden="true" />
         {action("Undo", <Undo2 className="h-4 w-4" />, () =>
           editor?.chain().focus().undo().run(),
         )}

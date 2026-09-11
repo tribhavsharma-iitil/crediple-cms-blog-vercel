@@ -1,6 +1,15 @@
 "use client";
 
-import { ArrowLeft, ArrowRight, ExternalLink, Upload, X } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  ExternalLink,
+  FileText,
+  Image as ImageIcon,
+  Search,
+  Upload,
+  X,
+} from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Input, Textarea, inputClassName } from "@/components/ui/Input";
@@ -182,7 +191,10 @@ export function BlogForm({ blog, readOnly, onSave, saving, formId, hideSubmit, s
     <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1.65fr)_minmax(22rem,0.85fr)]">
     <section className="space-y-4 rounded-xl border border-line bg-panel p-5">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="font-heading text-base font-semibold text-ink">Content</h2>
+        <h2 className="flex items-center gap-2 font-heading text-base font-semibold text-ink">
+          <FileText className="h-4 w-4 text-ink/50" aria-hidden="true" />
+          Content
+        </h2>
         <Button type="button" variant="ghost" size="sm" onClick={openPreview}>
           <ExternalLink className="h-3.5 w-3.5" />
           Preview
@@ -194,13 +206,13 @@ export function BlogForm({ blog, readOnly, onSave, saving, formId, hideSubmit, s
       <Field label="Content" hint={`${contentCharacterCount}/${LIMITS.content} visible characters`}><RichTextEditor disabled={readOnly} value={values.content} onChange={(content, characterCount) => { update("content", content); setContentCharacterCount(characterCount); }} /></Field>
     </section>
     <div className="space-y-6 xl:sticky xl:top-20">
-    <section className="space-y-4 rounded-xl border border-line bg-panel p-5"><h2 className="font-heading text-base font-semibold text-ink">Publishing details</h2>
+    <section className="space-y-4 rounded-xl border border-line bg-panel p-5"><h2 className="flex items-center gap-2 font-heading text-base font-semibold text-ink"><ImageIcon className="h-4 w-4 text-ink/50" aria-hidden="true" />Publishing details</h2>
       <Field label="Blog images" hint="Upload one or more images. The first image is used as the blog cover.">
         <input ref={fileInputRef} disabled={readOnly || uploading} type="file" accept="image/*" multiple onChange={addImages} className="sr-only" />
-        <button type="button" disabled={readOnly || uploading} onClick={() => fileInputRef.current?.click()} className={`${inputClassName} flex min-h-32 cursor-pointer flex-col items-center justify-center gap-2 border-dashed text-center disabled:cursor-not-allowed`}>
+        <button type="button" disabled={readOnly || uploading} onClick={() => fileInputRef.current?.click()} className={`${inputClassName} flex min-h-32 cursor-pointer flex-col items-center justify-center gap-2 border-dashed text-center transition-colors hover:border-accent hover:bg-accent-soft/40 disabled:cursor-not-allowed disabled:hover:border-line disabled:hover:bg-transparent`}>
           <Upload className="h-5 w-5 text-accent" aria-hidden="true" />
           <span className="text-sm font-medium text-ink">{uploading ? "Uploading..." : "Choose images"}</span>
-          <span className="text-xs text-ink/45">PNG, JPG, WEBP, or GIF up to {MAX_IMAGE_SIZE_MB}MB each</span>
+          <span className="text-xs text-ink/50">PNG, JPG, WEBP, or GIF up to {MAX_IMAGE_SIZE_MB}MB each</span>
         </button>
       </Field>
       {uploadError && <p className="rounded-lg border border-status-rejected/20 bg-status-rejected/10 px-3 py-2 text-sm text-status-rejected">{uploadError}</p>}
@@ -212,7 +224,7 @@ export function BlogForm({ blog, readOnly, onSave, saving, formId, hideSubmit, s
         </div>)}
       </div>}
     </section>
-    <section className="space-y-4 rounded-xl border border-line bg-panel p-5"><h2 className="font-heading text-base font-semibold text-ink">SEO</h2><Field label="Meta title" hint={`${values.metaTitle.length}/${LIMITS.metaTitle} characters`}><Input disabled={readOnly} maxLength={LIMITS.metaTitle} value={values.metaTitle} onChange={(event) => update("metaTitle", event.target.value)} placeholder="Title shown in search engines" /></Field><Field label="Meta description" hint={`${values.metaDescription.length}/${LIMITS.metaDescription} characters`}><Textarea disabled={readOnly} maxLength={LIMITS.metaDescription} value={values.metaDescription} onChange={(event) => update("metaDescription", event.target.value)} rows={3} placeholder="Short description for search engines" /></Field></section>
+    <section className="space-y-4 rounded-xl border border-line bg-panel p-5"><h2 className="flex items-center gap-2 font-heading text-base font-semibold text-ink"><Search className="h-4 w-4 text-ink/50" aria-hidden="true" />SEO</h2><Field label="Meta title" hint={`${values.metaTitle.length}/${LIMITS.metaTitle} characters`}><Input disabled={readOnly} maxLength={LIMITS.metaTitle} value={values.metaTitle} onChange={(event) => update("metaTitle", event.target.value)} placeholder="Title shown in search engines" /></Field><Field label="Meta description" hint={`${values.metaDescription.length}/${LIMITS.metaDescription} characters`}><Textarea disabled={readOnly} maxLength={LIMITS.metaDescription} value={values.metaDescription} onChange={(event) => update("metaDescription", event.target.value)} rows={3} placeholder="Short description for search engines" /></Field></section>
     </div>
     </div>
     {formError && <p role="alert" className="rounded-lg border border-status-rejected/20 bg-status-rejected/10 px-3 py-2 text-sm text-status-rejected">{formError}</p>}
@@ -231,11 +243,11 @@ function Field({
 }) {
   return (
     <div>
-      <label className="mb-1.5 block text-sm font-medium text-ink/80">
+      <label className="mb-1.5 block text-sm font-medium text-ink/70">
         {label}
       </label>
       {children}
-      {hint && <p className="mt-1.5 text-xs text-ink/45">{hint}</p>}
+      {hint && <p className="mt-1.5 text-xs text-ink/50">{hint}</p>}
     </div>
   );
 }

@@ -57,7 +57,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       )}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-40 flex w-72 -translate-x-full flex-col bg-[#0c1a35] text-white transition-transform md:sticky md:top-0 md:h-screen md:w-[var(--sidebar-width)] md:self-start md:translate-x-0",
+          "fixed inset-y-0 left-0 z-40 flex w-72 -translate-x-full flex-col bg-sidebar text-white transition-transform md:sticky md:top-0 md:h-screen md:w-[var(--sidebar-width)] md:self-start md:translate-x-0",
           drawerOpen && "translate-x-0",
         )}
       >

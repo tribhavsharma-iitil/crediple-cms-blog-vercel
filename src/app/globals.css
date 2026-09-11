@@ -12,6 +12,7 @@
   --color-canvas: var(--canvas);
   --color-panel: var(--panel);
   --color-line: var(--line);
+  --color-sidebar: var(--sidebar);
 
   --color-accent: var(--accent);
   --color-accent-soft: var(--accent-soft);
@@ -35,6 +36,10 @@
   --panel: #ffffff;
   --line: rgba(29, 78, 216, 0.12);
 
+  /* Permanent dark chrome for the app sidebar — intentionally does not
+     invert with the light/dark theme toggle, unlike ink/canvas/panel. */
+  --sidebar: #0c1a35;
+
   --accent: #1d4ed8;
   --accent-soft: #e7eeff;
   --accent-dark: #173f9e;
@@ -45,6 +50,14 @@
   --status-published: #166534;
   --status-rejected: #b91c1c;
 }
+
+/* ------------------------------------------------------------
+   Muted-text opacity scale (applies in both themes):
+     text-ink        primary text
+     text-ink/70     secondary text (subtitles, hints, labels)
+     text-ink/50     tertiary / disabled text (timestamps, empty states)
+   Avoid introducing other ink/NN values outside this scale.
+   ------------------------------------------------------------ */
 
 /* ============================================================
    DARK THEME
