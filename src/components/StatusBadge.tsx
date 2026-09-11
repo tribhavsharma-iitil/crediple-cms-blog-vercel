@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/Badge";
 import { BlogStatus } from "@/lib/mock-db";
 
 const CONFIG: Record<BlogStatus, { label: string; dot: string }> = {
@@ -12,14 +12,8 @@ const CONFIG: Record<BlogStatus, { label: string; dot: string }> = {
 export function StatusBadge({ status }: { status: BlogStatus }) {
   const config = CONFIG[status];
   return (
-    <span
-      className={cn(
-        "inline-flex min-w-[6.75rem] shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium font-mono",
-        "bg-ink/5 text-ink/70 dark:bg-white/5",
-      )}
-    >
-      <span className={cn("h-1.5 w-1.5 rounded-full", config.dot)} />
+    <Badge className="min-w-[6.75rem] justify-center font-mono" dotClassName={config.dot}>
       {config.label}
-    </span>
+    </Badge>
   );
 }

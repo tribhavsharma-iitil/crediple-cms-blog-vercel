@@ -1,12 +1,17 @@
 "use client";
 
 import Link from "next/link";
+import { ClipboardCheck, FileText, Send } from "lucide-react";
 import { useAuth } from "@/components/AuthProvider";
 import { AuthenticatedShell } from "@/components/AuthenticatedShell";
+import { Card } from "@/components/ui/Card";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { useDashboardSummary } from "@/hooks/useDashboardSummary";
+import { cn } from "@/lib/utils";
 
 export default function DashboardPage() {
-  const { activeCompanyId, user } = useAuth();
+  const { activeCompanyId, user, hasPermission } = useAuth();
   const {
     data: summary,
     isLoading,
@@ -15,10 +20,10 @@ export default function DashboardPage() {
 
   return (
     <AuthenticatedShell>
-      <h1 className="text-xl font-semibold text-ink mb-1">Dashboard</h1>
-      <p className="text-sm text-ink/60 mb-8">
-        Welcome back, {user?.name.split(" ")[0]}.
-      </p>
+      <PageHeader
+        title="Dashboard"
+        description={`Welcome back, ${user?.name.split(" ")[0] ?? ""}.`}
+      />
       {error && (
         <p
           role="alert"
@@ -30,20 +35,26 @@ export default function DashboardPage() {
         </p>
       )}
 
-      <div className="grid grid-cols-3 gap-4 mb-8">
-        <Card
+      <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <StatCard
+          icon={FileText}
+          iconClassName="bg-status-draft/10 text-status-draft"
           label="Drafts"
           value={summary?.draftCount}
           href="/blogs?status=draft"
           loading={isLoading}
         />
-        <Card
+        <StatCard
+          icon={ClipboardCheck}
+          iconClassName="bg-status-review/10 text-status-review"
           label="Awaiting review"
           value={summary?.pendingReviewCount}
           href="/review"
           loading={isLoading}
         />
-        <Card
+        <StatCard
+          icon={Send}
+          iconClassName="bg-status-approved/10 text-status-approved"
           label="Awaiting publish"
           value={summary?.pendingPublishCount}
           href="/publish"
@@ -51,87 +62,113 @@ export default function DashboardPage() {
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <section>
-          <h2 className="text-sm font-medium text-ink/80 mb-3">
-            Recently published
-          </h2>
-          <ul className="bg-panel border border-line rounded-lg divide-y divide-line">
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-sm font-medium text-ink/70">Recently published</h2>
+            <Link href="/blogs?status=published" className="text-xs font-medium text-accent hover:underline">
+              View all
+            </Link>
+          </div>
+          <Card className="divide-y divide-line overflow-hidden">
             {summary?.recentlyPublished.length ? (
               summary.recentlyPublished.map((b) => (
-                <li
+                <div
                   key={b.id}
-                  className="px-4 py-3 text-sm flex justify-between"
+                  className="flex items-center justify-between gap-3 px-4 py-3 text-sm transition-colors hover:bg-ink/[0.02]"
                 >
-                  <Link href={`/blogs/${b.id}`} title={b.title} className="min-w-0 flex-1 truncate hover:text-accent">
+                  <Link
+                    href={`/blogs/${b.id}`}
+                    title={b.title}
+                    className="min-w-0 flex-1 truncate hover:text-accent"
+                  >
                     {b.title}
                   </Link>
-                  <span className="text-xs text-ink/40 font-mono">
+                  <span className="font-mono text-xs text-ink/50">
                     {b.publishedAt
                       ? new Date(b.publishedAt).toLocaleDateString()
                       : ""}
                   </span>
-                </li>
+                </div>
               ))
             ) : (
-              <li className="px-4 py-6 text-sm text-ink/40 text-center">
+              <div className="px-5 py-10 text-center text-sm text-ink/50">
                 Nothing published yet.
-              </li>
+              </div>
             )}
-          </ul>
+          </Card>
         </section>
 
         <section>
-          <h2 className="text-sm font-medium text-ink/80 mb-3">
-            Recent activity
-          </h2>
-          <ul className="bg-panel border border-line rounded-lg divide-y divide-line">
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-sm font-medium text-ink/70">Recent activity</h2>
+            {hasPermission("audit.view_company") && (
+              <Link href="/audit-logs" className="text-xs font-medium text-accent hover:underline">
+                View all
+              </Link>
+            )}
+          </div>
+          <Card className="divide-y divide-line overflow-hidden">
             {summary?.recentActivity.length ? (
               summary.recentActivity.map((l) => (
-                <li
+                <div
                   key={l.id}
-                  className="px-4 py-3 text-sm flex justify-between"
+                  className="flex items-center justify-between gap-3 px-4 py-3 text-sm transition-colors hover:bg-ink/[0.02]"
                 >
-                  <span className="min-w-0 flex-1 truncate capitalize" title={l.blogTitle}>
-                    {l.action.replace(/_/g, " ")}{l.blogTitle ? `: ${l.blogTitle}` : ""}
+                  <span
+                    className="min-w-0 flex-1 truncate capitalize"
+                    title={l.blogTitle}
+                  >
+                    {l.action.replace(/_/g, " ")}
+                    {l.blogTitle ? `: ${l.blogTitle}` : ""}
                   </span>
-                  <span className="text-xs text-ink/40 font-mono">
+                  <span className="font-mono text-xs text-ink/50">
                     {new Date(l.createdAt).toLocaleTimeString()}
                   </span>
-                </li>
+                </div>
               ))
             ) : (
-              <li className="px-4 py-6 text-sm text-ink/40 text-center">
+              <div className="px-5 py-10 text-center text-sm text-ink/50">
                 No activity yet.
-              </li>
+              </div>
             )}
-          </ul>
+          </Card>
         </section>
       </div>
     </AuthenticatedShell>
   );
 }
 
-function Card({
+function StatCard({
+  icon: Icon,
+  iconClassName,
   label,
   value,
   href,
   loading,
 }: {
+  icon: React.ComponentType<{ className?: string }>;
+  iconClassName?: string;
   label: string;
   value?: number;
   href: string;
   loading?: boolean;
 }) {
   return (
-    <Link
-      href={href}
-      className="block bg-panel border border-line rounded-lg px-5 py-4 hover:border-accent transition-colors"
-    >
-      <p className="text-2xl font-semibold font-mono text-ink">
-        {loading ? "…" : (value ?? "—")}
-      </p>
-      <p className="text-sm text-ink/60 mt-1">{label}</p>
-    </Link>
+    <Card hover className="overflow-hidden p-0">
+      <Link href={href} className="flex items-center gap-4 px-5 py-4">
+        <div className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-lg", iconClassName)}>
+          <Icon className="h-5 w-5" />
+        </div>
+        <div className="min-w-0">
+          {loading ? (
+            <Skeleton className="h-7 w-12" />
+          ) : (
+            <p className="font-mono text-2xl font-semibold text-ink">{value ?? "—"}</p>
+          )}
+          <p className="mt-0.5 truncate text-sm text-ink/70">{label}</p>
+        </div>
+      </Link>
+    </Card>
   );
 }

@@ -5,6 +5,7 @@ import { useAuth } from "@/components/AuthProvider";
 import { AuthenticatedShell } from "@/components/AuthenticatedShell";
 import { BlogForm, BlogFormValues } from "@/components/BlogForm";
 import { Button } from "@/components/ui/Button";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { useCreateBlog } from "@/hooks/useBlogs";
 import { ApiError } from "@/lib/api";
 import { useToast } from "@/components/ToastProvider";
@@ -39,22 +40,24 @@ export default function NewBlogPage() {
   return (
     <AuthenticatedShell>
       <div className="w-full">
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-          <h1 className="text-xl font-semibold text-ink">Create Blog</h1>
-          <div className="flex items-center gap-3">
-            {error && (
-              <p className="text-sm text-status-rejected">{error}</p>
-            )}
-            <Button
-              type="submit"
-              form="new-blog-form"
-              variant="primary"
-              disabled={createBlog.isPending}
-            >
-              {createBlog.isPending ? "Saving..." : "Save draft"}
-            </Button>
-          </div>
-        </div>
+        <PageHeader
+          backHref="/blogs"
+          backLabel="Back to blogs"
+          title="Create Blog"
+          actions={
+            <div className="flex items-center gap-3">
+              {error && <p className="text-sm text-status-rejected">{error}</p>}
+              <Button
+                type="submit"
+                form="new-blog-form"
+                variant="primary"
+                disabled={createBlog.isPending}
+              >
+                {createBlog.isPending ? "Saving..." : "Save draft"}
+              </Button>
+            </div>
+          }
+        />
         <BlogForm
           formId="new-blog-form"
           hideSubmit

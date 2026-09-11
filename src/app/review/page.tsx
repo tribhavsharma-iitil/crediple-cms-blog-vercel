@@ -1,65 +1,116 @@
 "use client";
 
 import Link from "next/link";
+import { useMemo, useState } from "react";
 import { ClipboardCheck } from "lucide-react";
 import { useAuth } from "@/components/AuthProvider";
 import { AuthenticatedShell } from "@/components/AuthenticatedShell";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { Input } from "@/components/ui/Input";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Table, type TableColumn } from "@/components/ui/Table";
+import { Pagination } from "@/components/ui/Pagination";
+import { useClientPagination } from "@/hooks/useClientPagination";
+import { useDebounce } from "@/hooks/useDebounce";
 import { useBlogs } from "@/hooks/useBlogs";
+import type { Blog } from "@/lib/mock-db";
+
+const COLUMNS: TableColumn<Blog>[] = [
+  {
+    key: "title",
+    header: "Title",
+    render: (blog) => (
+      <Link
+        href={`/blogs/${blog.id}`}
+        className="block rounded focus-visible:ring-2 focus-visible:ring-accent/40"
+      >
+        <p className="truncate text-sm font-medium text-ink group-hover:text-accent">
+          {blog.title}
+        </p>
+      </Link>
+    ),
+  },
+  {
+    key: "submitted",
+    header: "Submitted",
+    cellClassName: "whitespace-nowrap text-xs text-ink/50",
+    render: (blog) => new Date(blog.updatedAt).toLocaleDateString(),
+  },
+  {
+    key: "action",
+    header: "",
+    cellClassName: "text-right",
+    render: (blog) => (
+      <Link href={`/blogs/${blog.id}`} className="text-xs font-medium text-accent">
+        Review →
+      </Link>
+    ),
+  },
+];
 
 export default function ReviewQueuePage() {
   const { activeCompanyId } = useAuth();
-  const { data: blogs = [], isLoading: loading } = useBlogs(
+  const { data: blogs = [], isLoading } = useBlogs(
     activeCompanyId,
     "submitted_for_review",
   );
+  const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 300);
+
+  const filteredBlogs = useMemo(() => {
+    const term = debouncedSearch.trim().toLowerCase();
+    if (!term) return blogs;
+    return blogs.filter((blog) =>
+      `${blog.title} ${blog.excerpt} ${blog.tags.join(" ")}`.toLowerCase().includes(term),
+    );
+  }, [blogs, debouncedSearch]);
+
+  const { page, setPage, totalPages, totalItems, limit, pageItems } = useClientPagination(
+    filteredBlogs,
+    10,
+    debouncedSearch,
+  );
+
   return (
     <AuthenticatedShell>
-      <h1 className="mb-1 text-xl font-semibold text-ink">Review queue</h1>
-      <p className="mb-6 text-sm text-ink/60">
-        Posts waiting for you to approve or send back.
-      </p>
-      <div className="divide-y divide-line overflow-hidden rounded-xl border border-line bg-panel">
-        {loading ? (
-          <div className="space-y-3 px-4 py-5">
-            {Array.from({ length: 4 }).map((_, index) => (
-              <div key={index} className="space-y-2">
-                <div className="h-4 w-2/5 animate-pulse rounded bg-ink/5" />
-                <div className="h-3 w-1/4 animate-pulse rounded bg-ink/5" />
-              </div>
-            ))}
-          </div>
-        ) : blogs.length === 0 ? (
-          <div className="flex min-h-52 flex-col items-center justify-center px-4 py-8 text-center">
-            <ClipboardCheck className="mb-3 h-7 w-7 text-ink/35" />
-            <p className="text-sm font-medium text-ink">
-              Nothing waiting for review
-            </p>
-            <p className="mt-1 text-sm text-ink/50">
-              Posts submitted for review will appear here.
-            </p>
-          </div>
-        ) : (
-          blogs.map((blog) => (
-            <Link
-              key={blog.id}
-              href={`/blogs/${blog.id}`}
-              className="flex items-center justify-between gap-3 px-4 py-3.5 transition-colors hover:bg-canvas focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent"
-            >
-              <div className="min-w-0">
-                <p className="truncate text-sm font-medium text-ink">
-                  {blog.title}
-                </p>
-                <p className="mt-0.5 text-xs font-mono text-ink/40">
-                  Submitted {new Date(blog.updatedAt).toLocaleDateString()}
-                </p>
-              </div>
-              <span className="shrink-0 text-xs font-medium text-accent">
-                Review →
-              </span>
-            </Link>
-          ))
-        )}
+      <PageHeader
+        title="Review queue"
+        description="Posts waiting for you to approve or send back."
+      />
+
+      <div className="mb-5 max-w-md">
+        <Input
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+          placeholder="Search all posts in review"
+          aria-label="Search all posts in review"
+        />
       </div>
+
+      <Table
+        columns={COLUMNS}
+        data={pageItems}
+        getRowKey={(blog) => blog.id}
+        isLoading={isLoading}
+        emptyMessage={
+          <EmptyState
+            icon={ClipboardCheck}
+            title="Nothing waiting for review"
+            description="Posts submitted for review will appear here."
+          />
+        }
+      />
+
+      {!isLoading && (
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          totalItems={totalItems}
+          limit={limit}
+          onPageChange={setPage}
+          itemLabel="posts"
+        />
+      )}
     </AuthenticatedShell>
   );
 }

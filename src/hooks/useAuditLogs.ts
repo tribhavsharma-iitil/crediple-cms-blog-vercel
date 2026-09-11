@@ -90,6 +90,7 @@ export function useAuditLogs(
     entityId?: string;
     userId?: string;
     action?: string;
+    search?: string;
   }
 ) {
   const page = options?.page ?? 1;
@@ -98,9 +99,10 @@ export function useAuditLogs(
   const entityId = options?.entityId?.trim() || undefined;
   const userId = options?.userId?.trim() || undefined;
   const action = options?.action?.trim() || undefined;
+  const search = options?.search?.trim() || undefined;
 
   return useQuery({
-    queryKey: queryKeys.auditLogs(companyId, page, limit, entityType, entityId, userId, action),
+    queryKey: queryKeys.auditLogs(companyId, page, limit, entityType, entityId, userId, action, search),
     queryFn: async () => {
       const params = new URLSearchParams({
         page: String(page),
@@ -111,6 +113,7 @@ export function useAuditLogs(
       if (entityId) params.set("entityId", entityId);
       if (userId) params.set("userId", userId);
       if (action) params.set("action", action);
+      if (search) params.set("search", search);
 
       const response = await api.get<AuditLogsResponse>(`/api/v1/audit-logs?${params.toString()}`);
       return normalizeAuditLogsResponse(response, page, limit);

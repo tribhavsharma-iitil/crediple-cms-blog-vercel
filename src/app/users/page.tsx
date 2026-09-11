@@ -1,7 +1,15 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import { AuthenticatedShell } from "@/components/AuthenticatedShell";
-import { useUsers } from "@/hooks/useUsers";
+import { Badge } from "@/components/ui/Badge";
+import { Input } from "@/components/ui/Input";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { Table, type TableColumn } from "@/components/ui/Table";
+import { Pagination } from "@/components/ui/Pagination";
+import { useClientPagination } from "@/hooks/useClientPagination";
+import { useDebounce } from "@/hooks/useDebounce";
+import { useUsers, type UserRow } from "@/hooks/useUsers";
 
 function renderRole(role: unknown) {
   if (typeof role === "string") return role;
@@ -12,31 +20,78 @@ function renderRole(role: unknown) {
   return "—";
 }
 
+const COLUMNS: TableColumn<UserRow>[] = [
+  {
+    key: "name",
+    header: "Name",
+    render: (user) => (
+      <div>
+        <p className="text-sm font-medium text-ink">{user.name}</p>
+        <p className="text-xs text-ink/50">{user.email}</p>
+      </div>
+    ),
+  },
+  {
+    key: "role",
+    header: "Role",
+    render: (user) => (
+      <Badge variant="outline" className="font-mono">
+        {renderRole(user.role)}
+      </Badge>
+    ),
+  },
+];
+
 export default function UsersPage() {
-  const { data: users = [], isLoading: loading } = useUsers();
+  const { data: users = [], isLoading } = useUsers();
+  const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 300);
+
+  const filteredUsers = useMemo(() => {
+    const term = debouncedSearch.trim().toLowerCase();
+    if (!term) return users;
+    return users.filter((user) =>
+      `${user.name} ${user.email} ${renderRole(user.role)}`.toLowerCase().includes(term),
+    );
+  }, [users, debouncedSearch]);
+
+  const { page, setPage, totalPages, totalItems, limit, pageItems } = useClientPagination(
+    filteredUsers,
+    10,
+    debouncedSearch,
+  );
 
   return (
     <AuthenticatedShell>
-      <h1 className="mb-1 text-xl font-semibold text-ink">Users</h1>
-      <p className="mb-6 text-sm text-ink/60">People with access to this workspace.</p>
+      <PageHeader title="Users" description="People with access to this workspace." />
 
-      <div className="divide-y divide-line rounded-lg border border-line bg-panel">
-        {loading ? (
-          <p className="px-4 py-8 text-center text-sm text-ink/40">Loading...</p>
-        ) : (
-          users.map((user) => (
-            <div key={user.id} className="flex items-center justify-between px-4 py-3.5">
-              <div>
-                <p className="text-sm font-medium text-ink">{user.name}</p>
-                <p className="text-xs text-ink/40">{user.email}</p>
-              </div>
-              <span className="rounded-full border border-line bg-canvas px-2.5 py-0.5 font-mono text-xs text-ink/60">
-                {renderRole(user.role)}
-              </span>
-            </div>
-          ))
-        )}
+      <div className="mb-5 max-w-md">
+        <Input
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+          placeholder="Search all users"
+          aria-label="Search all users"
+        />
       </div>
+
+      <Table
+        columns={COLUMNS}
+        data={pageItems}
+        getRowKey={(user) => user.id}
+        isLoading={isLoading}
+        emptyMessage="No users found."
+      />
+
+      {!isLoading && (
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          totalItems={totalItems}
+          limit={limit}
+          onPageChange={setPage}
+          itemLabel="users"
+        />
+      )}
     </AuthenticatedShell>
   );
 }
