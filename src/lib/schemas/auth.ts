@@ -49,7 +49,7 @@ export const resetPasswordSchema = z
 
 export const changePasswordSchema = z
   .object({
-    oldPassword: z.string().min(1, "Current password is required."),
+    oldPassword: strongPassword,
     newPassword: strongPassword,
     confirmPassword: z.string(),
   })

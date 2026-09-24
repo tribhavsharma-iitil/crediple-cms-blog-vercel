@@ -128,7 +128,7 @@ function BlogsContent() {
           </RequirePermission>
         }
       />
-      <div className="sticky top-14 z-10 -mx-4 mb-5 border-y border-line bg-canvas/95 px-4 py-3 backdrop-blur-sm sm:mx-0 sm:px-0">
+      <div className="sticky top-14 z-10 -mx-4 mb-5 border-y border-line bg-gray-50 dark:bg-transparent px-4 py-3 backdrop-blur-sm sm:mx-0 sm:px-0">
         <div className="overflow-x-auto pb-1">
           <div className="flex min-w-max gap-1.5">
             {FILTERS.map((filter) => (
