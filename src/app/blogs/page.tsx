@@ -44,17 +44,23 @@ const COLUMNS: TableColumn<Blog>[] = [
           {blog.title}
         </p>
         {blog.excerpt && (
-          <p className="mt-1 line-clamp-1 text-xs text-ink/70">{blog.excerpt}</p>
+          <p className="mt-1 line-clamp-1 text-xs text-ink/70">
+            {blog.excerpt}
+          </p>
         )}
       </Link>
     ),
+    sortable: true,
+    sortValue: (blog) => blog.title,
   },
   {
     key: "tags",
     header: "Tags",
     headerClassName: "w-[22%]",
     cellClassName: "w-[22%] text-xs text-ink/70",
-    render: (blog) => <span className="block truncate">{blog.tags.join(", ") || "—"}</span>,
+    render: (blog) => (
+      <span className="block truncate">{blog.tags.join(", ") || "—"}</span>
+    ),
   },
   {
     key: "status",
@@ -62,6 +68,8 @@ const COLUMNS: TableColumn<Blog>[] = [
     headerClassName: "w-[18%]",
     cellClassName: "w-[18%]",
     render: (blog) => <StatusBadge status={blog.status} />,
+    sortable: true,
+    sortValue: (blog) => blog.status,
   },
   {
     key: "updated",
@@ -69,13 +77,19 @@ const COLUMNS: TableColumn<Blog>[] = [
     headerClassName: "w-[12%]",
     cellClassName: "w-[12%] whitespace-nowrap text-xs text-ink/70",
     render: (blog) => new Date(blog.updatedAt).toLocaleDateString(),
+    sortable: true,
+    sortValue: (blog) => new Date(blog.updatedAt).getTime(),
   },
 ];
 
 export default function BlogsPage() {
   return (
     <AuthenticatedShell>
-      <Suspense fallback={<div className="h-64 animate-pulse rounded-xl border border-line bg-panel" />}>
+      <Suspense
+        fallback={
+          <div className="h-64 animate-pulse rounded-xl border border-line bg-panel" />
+        }
+      >
         <BlogsContent />
       </Suspense>
     </AuthenticatedShell>

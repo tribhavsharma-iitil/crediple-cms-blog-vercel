@@ -29,12 +29,16 @@ const COLUMNS: TableColumn<Blog>[] = [
         </p>
       </Link>
     ),
+    sortable: true,
+    sortValue: (blog) => blog.title?.toLowerCase(),
   },
   {
     key: "submitted",
     header: "Submitted",
     cellClassName: "whitespace-nowrap text-xs text-ink/50",
     render: (blog) => new Date(blog.updatedAt).toLocaleDateString(),
+    sortable: true,
+    sortValue: (blog) => new Date(blog.updatedAt)?.getTime(),
   },
   {
     key: "action",
