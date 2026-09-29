@@ -7,6 +7,8 @@ import { queryKeys } from "@/lib/queryKeys";
 export interface UserRow {
   id: string;
   name: string;
+  firstName?: string;
+  lastName?: string;
   email: string;
   isActive: boolean;
   role: { id?: string; key?: string; label: string } | string | null;

@@ -17,6 +17,8 @@ const COLUMNS: TableColumn<CompanyRow>[] = [
     header: "Name",
     cellClassName: "font-medium text-ink",
     render: (company) => company.name,
+    sortable: true,
+    sortValue: (company) => company.name?.toLowerCase(),
   },
   {
     key: "id",

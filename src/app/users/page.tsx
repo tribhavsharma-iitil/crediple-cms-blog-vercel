@@ -26,10 +26,14 @@ const COLUMNS: TableColumn<UserRow>[] = [
     header: "Name",
     render: (user) => (
       <div>
-        <p className="text-sm font-medium text-ink">{user.name}</p>
+        <p className="text-sm font-medium text-ink">
+          {user.firstName} {user.lastName}
+        </p>
         <p className="text-xs text-ink/50">{user.email}</p>
       </div>
     ),
+    sortable: true,
+    sortValue: (user) => user?.firstName?.toLowerCase(),
   },
   {
     key: "role",
@@ -39,6 +43,8 @@ const COLUMNS: TableColumn<UserRow>[] = [
         {renderRole(user.role)}
       </Badge>
     ),
+    sortable: true,
+    sortValue: (user) => renderRole(user.role)?.toLowerCase(),
   },
 ];
 
